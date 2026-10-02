@@ -1,77 +1,94 @@
-# DECISIONS.md — Ashworth & Vale: Private Financial Counsel
+# DECISIONS.md — Deep Field: Exoplanet Signal Array
 
 Log of meaningful choices made while building `index.html`, a single
-self-contained chat-style finance assistant (HTML/CSS/JS inline, no
+self-contained procedural space generator (HTML/CSS/JS inline, no
 external libraries, fonts, or assets). This replaces the previous
-"Apex" sports trivia build in this repo per the latest request.
+"Ashworth & Vale" finance-chat build in this repo per the latest request.
 
-## Concept & persona
-- Framed as correspondence with a named private financial counsel —
-  **Edmund Vale** of **Ashworth & Vale** — rather than a generic
-  "AI assistant" chat box. A persona with a voice (measured, old-money,
-  slightly formal) reads as considered rather than templated, and gives
-  the scripted responses a reason to sound the way they do.
-- Scripted response engine uses **keyword/regex rule matching** against
-  11 finance topics (investing, budgeting, debt, retirement, tax,
-  business/startup, market/economy, savings, greetings, thanks,
-  farewell), each with 2–3 hand-written variations so repeat questions
-  don't feel robotic, plus a fallback that asks a clarifying question
-  in-voice rather than a dead "I don't understand." No backend/API —
-  all canned, as the brief allowed, but tuned to sound specific
-  (interest-rate ranking for debt, cash-conversion cycle for business,
-  three-to-six-month reserve language) rather than vague filler.
+## Concept
+- Framed as a deep-space SETI-style "signal array" rather than a generic
+  "random planet button." Each click is a "triangulation" of a new
+  exoplanet signal — gives the randomization a diegetic reason to exist
+  and a reason to show a scanning animation before the reveal.
+- Generator produces a full **star system reading**, not just a planet:
+  host star spectral class/temp, orbital position among N siblings,
+  orbital period/distance, radius, mass, surface temp, atmosphere, ring/
+  moon presence, a computed habitability index, and a one-off narrative
+  "transmission log" sentence — so each result reads as a considered
+  dossier, not a single random noun.
+- 9 planet archetypes (scorched, molten, barren, tundra, ocean,
+  terrestrial, toxic, ice giant, gas giant) x 6 stellar classes x
+  continuous numeric ranges for every physical stat, so repeat clicks
+  stay visually and texturally distinct rather than cycling a small set
+  of canned combinations.
 
 ## Avoiding the generic "AI-generated" look
-- **Palette**: deep forest/ink green + aged brass + burgundy, on a warm
-  parchment text color — explicitly not a purple-to-blue gradient.
-  Brass is used as the single accent color throughout (ticker, borders,
-  seals, send button) instead of a gradient "hero" identity.
-- **No glassmorphism** — panels are solid, layered dark greens with thin
-  brass hairline borders (a ledger/leather-bound-book feel), not frosted
-  translucent cards.
-- **Typography**: Palatino/Iowan Old Style/Georgia serif stack for all
-  prose (distinctive, not Inter/system-ui), paired with Courier New
-  monospace for all numeric/ticker data — a deliberate "ledger" pairing
-  rather than one generic sans font doing everything.
-- **No emoji** anywhere; iconography is hand-built inline SVG (a wax-seal
-  monogram crest, a shield "seal" mark next to the advisor's name, a
-  quill-nib send arrow).
-- **Asymmetric layout**: fixed-width sidebar (advisor card + prompt list
-  + house motto) beside a wider chat column — not a centered hero. Chat
-  bubbles use mixed corner radii (sharp corner on the "origin" side,
-  rounded elsewhere) rather than uniform pill shapes, echoing a folded
-  letter/stamped card rather than a default chat-app bubble.
-- **Scrolling stock ticker** across the top (randomized fake symbols with
-  a live random-walk price update every ~2.6s) adds texture and motion
-  that's thematically load-bearing, not decorative gradient noise.
+- **Palette**: near-black ink/navy background with a single amber accent
+  (`--accent:#ffb454`) — explicitly not a purple-to-blue gradient. Green/
+  red are reserved for functional status only (habitability meter ends),
+  never used as a decorative gradient identity.
+- **No glassmorphism** — panels are solid dark gradients with a thin
+  1px hairline border; the only "frosted" surface is the scan overlay,
+  which is opaque-dark by design (sensor static), not translucent glass.
+- **Typography**: condensed/semibold system sans (`Segoe UI Semibold`/
+  `Arial Narrow`) for display text, paired with a monospace stack
+  (`Cascadia Code`/`SF Mono`/Consolas) for all data/readouts — a
+  deliberate "mission-control telemetry" pairing instead of one generic
+  sans doing everything. No Inter, no system-ui.
+- **No emoji** — the only iconography is a hand-built inline SVG orbit
+  mark in the header; HUD corner brackets (plain CSS borders) frame the
+  viewer instead of a rounded card.
+- **Asymmetric layout**: viewer/controls panel and data-readout panel
+  are unequal widths (1.05fr/0.95fr), not a centered hero or two
+  identical columns. Corners of the viewer frame are sharp HUD brackets,
+  not uniform rounded corners.
+- **Starfield background** is a live canvas of individually twinkling
+  stars (phase-offset sine alpha per star), not a static image or CSS
+  gradient standing in for "space."
 
 ## Delight / polish
-- **Wax-seal stamp animation + sound** on the send button: a quick
-  scale/rotate "thump" synced to a synthesized noise-burst + low sine
-  thud (Web Audio API, no audio files) — stands in for the satisfying
-  "stamping a letter shut" moment when a message is sent.
-- A soft two-note **chime** (Web Audio) plays when Edmund's reply lands,
-  and a typing indicator (three breathing dots, styled as pen taps)
-  shows during the scripted "thinking" delay (700–1400ms, randomized so
-  it doesn't feel metronomic).
-- Quick-start prompt chips (sidebar "Begin With" list + composer
-  "quick topics" row) insert and auto-send a relevant question — lets a
-  first-time visitor see the persona respond immediately without typing.
-- Textarea auto-grows with content; Enter sends, Shift+Enter breaks line,
-  consistent with real chat-app conventions despite the bespoke visuals.
+- **Procedural canvas planet renderer**: real-time 2D canvas draws a
+  shaded sphere (radial gradient + terminator shadow), type-specific
+  surface texture (cloud bands for giants, continent/crater blotches for
+  rocky/ocean worlds), optional ring system (two-tone, clipped
+  front/behind the sphere), and orbiting moons — all procedurally seeded
+  per result and animated continuously (slow rotation drift, moon
+  orbit), so the output feels like a rendered object, not a static icon.
+- **Scanning sequence**: clicking "Triangulate Signal" plays a
+  descending synthesized sweep tone (Web Audio, no audio files), steps
+  through five status labels ("Acquiring carrier" → "Locking") over a
+  filling progress bar, then crossfades to the result with a two-note
+  ascending "lock" chime — the moment of delight the brief asked for.
+- Data rows fade/slide in with a staggered delay so the readout feels
+  like it's populating live rather than appearing all at once.
+- Habitability meter fills with an eased transition and a fixed
+  red→amber→green gradient strip, scrubbed to the right position by
+  background-position — functional color is earned, not decorative.
+- "Recent Signals" history (last 6) gives the page a sense of session
+  memory and texture without needing actual persistence.
+- Hover/active states on the button (glow, color invert, press-scale)
+  and on history rows (background tint) for interaction feedback
+  throughout.
 
 ## Scope narrowed on purpose
-- **Rule-based matching, not a full NLU/intent system** — a small,
-  curated set of finance topics with strong, specific copy beats a huge
-  shallow keyword list. Kept to ~11 categories that cover the most
-  common personal/business finance questions.
-- **No persistence** (chat resets on reload) — a session-only demo chat
-  doesn't need local storage or accounts; added complexity wasn't
-  justified for a single self-contained file.
-- **Sidebar collapses to a horizontal scroll strip under 860px** rather
-  than a hamburger menu/off-canvas drawer — simpler to implement well
-  and keeps the advisor card and prompts reachable on phone without
-  extra interaction chrome.
+- **2D canvas, not WebGL/3D** — a shaded-circle-plus-texture approach
+  reads as a convincing procedural planet at this size without the
+  performance cost of a 3D renderer, important given the low-spec
+  laptop this runs on.
+- **No true spherical projection for surface features** — blotches/bands
+  are positioned and drifted in 2D polar coordinates against the clipped
+  circle rather than projected from a 3D sphere. Visually convincing at
+  this scale; a full projection wasn't worth the complexity for a demo.
+- **Moon occlusion simplified** — moons always render in front of the
+  planet rather than passing behind it. Acceptable simplification; real
+  occlusion would need z-sorting per frame for little visible benefit.
+- **History capped at 6 entries, session-only** — no localStorage/
+  persistence; matches the "single self-contained file, no extra
+  complexity" brief and keeps the panel from growing unbounded.
+- **Narrative log is template-based** (2 hand-written variants per
+  planet archetype, 18 total), not generative text — kept intentionally
+  curated rather than a huge shallow template pool, per guidance to
+  favor depth over breadth of canned content.
 
 ## Repo / deployment
 - Built directly inside the existing `sports-game-demo` repo as

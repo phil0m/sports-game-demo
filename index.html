@@ -3,700 +3,653 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Ashworth &amp; Vale &mdash; Private Financial Counsel</title>
+<title>Deep Field &mdash; Signal Array</title>
 <style>
   :root{
-    --ink:#0b1d17;
-    --panel:#102820;
-    --panel-2:#0e241d;
-    --rule:rgba(176,141,79,0.28);
-    --brass:#b08d4f;
-    --brass-light:#e4cf9a;
-    --brass-dim:#7c6436;
-    --parchment:#efe6d1;
-    --parchment-dim:#cdc3a9;
-    --burgundy:#6e2a35;
-    --burgundy-light:#9a4552;
-    --ink-text:#1c130c;
-    --up:#4f9a6e;
-    --down:#a14b4b;
+    --bg:#05060a;
+    --bg-2:#0a0e16;
+    --panel:#0b0f18;
+    --panel-2:#0d1220;
+    --line:rgba(255,255,255,0.07);
+    --accent:#ffb454;
+    --accent-dim:#8a6a2e;
+    --accent-soft:rgba(255,180,84,0.14);
+    --accent-glow:rgba(255,180,84,0.45);
+    --text:#dde3ec;
+    --text-dim:#7c8798;
+    --text-faint:#4b5566;
+    --good:#5ad18f;
+    --bad:#ff5d5d;
+    --display: 'Segoe UI Semibold','Arial Narrow',Arial,sans-serif;
+    --mono: 'Cascadia Code','SF Mono',Consolas,'Courier New',monospace;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0;
     min-height:100vh;
-    background:
-      repeating-linear-gradient(0deg, rgba(176,141,79,0.025) 0px, rgba(176,141,79,0.025) 1px, transparent 1px, transparent 26px),
-      radial-gradient(ellipse at 10% 0%, rgba(176,141,79,0.08), transparent 55%),
-      linear-gradient(175deg, var(--ink), #060f0c 85%);
-    color:var(--parchment);
-    font-family: Palatino, 'Palatino Linotype', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-    display:flex;
-    justify-content:center;
-    padding:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    overflow-x:hidden;
+    position:relative;
   }
-  .mono{font-family:'Courier New', Courier, monospace;}
+  canvas#starfield{
+    position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block;
+  }
+  .vignette{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0,0,0,0.55) 100%);
+  }
 
   .app{
-    width:100%;
-    max-width:1180px;
+    position:relative; z-index:2;
+    max-width:1180px; margin:0 auto;
+    padding:22px 24px 48px;
     min-height:100vh;
-    display:grid;
-    grid-template-columns: 300px 1fr;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      "header header"
-      "side main";
-    box-shadow:0 0 120px rgba(0,0,0,0.6);
   }
 
-  /* ---------------- Header ---------------- */
   header{
-    grid-area:header;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:20px 32px 16px;
-    border-bottom:1px solid var(--rule);
-    gap:20px;
-    flex-wrap:wrap;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding-bottom:16px; margin-bottom:22px;
+    border-bottom:1px solid var(--line);
   }
-  .brandrow{display:flex; align-items:center; gap:14px;}
-  .crest{width:40px;height:40px; flex:0 0 40px;}
-  .brandname{
-    font-size:22px;
-    letter-spacing:1px;
-    color:var(--parchment);
-  }
-  .brandname b{color:var(--brass-light); font-weight:400;}
-  .brandtag{
-    font-size:10.5px;
-    letter-spacing:3px;
-    text-transform:uppercase;
-    color:var(--brass-dim);
-    margin-top:3px;
-  }
-  .headright{
-    text-align:right;
-    font-size:11px;
-    letter-spacing:1.5px;
-    color:var(--parchment-dim);
-    text-transform:uppercase;
-  }
-  .headright .hours{color:var(--brass-light); margin-top:2px;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand svg{width:30px;height:30px; flex:0 0 30px; filter:drop-shadow(0 0 6px var(--accent-glow));}
+  .brand-text{font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:3px; color:var(--text);}
+  .brand-sub{display:block; font-family:var(--mono); font-weight:400; font-size:10px; letter-spacing:4px; color:var(--accent-dim); margin-top:3px;}
+  .status{display:flex; align-items:center; gap:9px; font-size:11px; letter-spacing:2px; color:var(--text-dim);}
+  .status-dot{width:8px; height:8px; border-radius:50%; background:var(--good); box-shadow:0 0 8px var(--good); animation:blink 2.4s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1;} 50%{opacity:0.35;}}
 
-  /* ---------------- Ticker ---------------- */
-  .ticker-wrap{
-    grid-column:1 / -1;
-    overflow:hidden;
-    background:var(--panel-2);
-    border-bottom:1px solid var(--rule);
-    position:relative;
-  }
-  .ticker-wrap::before,
-  .ticker-wrap::after{
-    content:"";
-    position:absolute; top:0; bottom:0; width:40px; z-index:2;
-    pointer-events:none;
-  }
-  .ticker-wrap::before{left:0; background:linear-gradient(90deg, var(--panel-2), transparent);}
-  .ticker-wrap::after{right:0; background:linear-gradient(270deg, var(--panel-2), transparent);}
-  .ticker{
-    display:flex;
-    gap:38px;
-    padding:9px 0;
-    white-space:nowrap;
-    animation:scrollTicker 38s linear infinite;
-    width:max-content;
-  }
-  @keyframes scrollTicker{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
-  .tick{
-    font-size:12.5px;
-    letter-spacing:0.5px;
-    display:inline-flex;
-    gap:8px;
-    align-items:baseline;
-    color:var(--parchment-dim);
-  }
-  .tick .sym{color:var(--brass-light);}
-  .tick .chg.up{color:var(--up);}
-  .tick .chg.down{color:var(--down);}
-
-  /* ---------------- Sidebar ---------------- */
-  aside{
-    grid-area:side;
-    border-right:1px solid var(--rule);
-    padding:26px 24px 20px;
-    display:flex;
-    flex-direction:column;
+  main.grid{
+    display:grid;
+    grid-template-columns: 1.05fr 0.95fr;
     gap:26px;
+    align-items:start;
   }
-  .advisor-card{
-    border:1px solid var(--rule);
-    background:linear-gradient(160deg, var(--panel), var(--panel-2));
-    border-radius:4px 14px 4px 14px;
-    padding:20px 18px;
+  @media (max-width:880px){
+    main.grid{grid-template-columns:1fr;}
+  }
+
+  section.panel{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:22px;
     position:relative;
   }
-  .advisor-card .role{
-    font-size:10px;
-    letter-spacing:2.5px;
-    text-transform:uppercase;
-    color:var(--brass-dim);
-    margin-bottom:8px;
-  }
-  .advisor-card .name{
-    font-size:19px;
-    color:var(--brass-light);
-    margin-bottom:6px;
-  }
-  .advisor-card .desc{
-    font-size:12.5px;
-    line-height:1.6;
-    color:var(--parchment-dim);
-  }
-  .status-dot{
-    display:inline-block;
-    width:7px;height:7px;
-    border-radius:50%;
-    background:var(--up);
-    box-shadow:0 0 8px rgba(79,154,110,0.9);
-    margin-right:6px;
-    animation:breathe 2.4s ease-in-out infinite;
-  }
-  @keyframes breathe{ 0%,100%{opacity:0.6;} 50%{opacity:1;} }
 
-  .sidebox h3{
-    font-size:11px;
-    letter-spacing:2.5px;
-    text-transform:uppercase;
-    color:var(--brass-dim);
-    margin:0 0 12px;
-    padding-bottom:8px;
-    border-bottom:1px solid var(--rule);
-  }
-  .prompt-list{display:flex; flex-direction:column; gap:9px;}
-  .prompt-chip{
-    text-align:left;
-    background:transparent;
-    border:1px solid rgba(176,141,79,0.3);
-    color:var(--parchment-dim);
-    font-family:inherit;
-    font-size:12.5px;
-    padding:10px 12px;
-    border-radius:3px 10px 3px 10px;
-    cursor:pointer;
-    transition:border-color .2s, color .2s, background .2s, transform .2s;
-    line-height:1.4;
-  }
-  .prompt-chip:hover{
-    border-color:var(--brass);
-    color:var(--brass-light);
-    background:rgba(176,141,79,0.07);
-    transform:translateX(3px);
-  }
-
-  .ledger-note{
-    margin-top:auto;
-    font-size:11px;
-    line-height:1.7;
-    color:var(--brass-dim);
-    border-top:1px solid var(--rule);
-    padding-top:14px;
-    letter-spacing:0.3px;
-  }
-
-  /* ---------------- Main / chat ---------------- */
-  main{
-    grid-area:main;
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-  .chat-scroll{
-    flex:1;
-    overflow-y:auto;
-    padding:28px 36px 10px;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-  }
-  .chat-scroll::-webkit-scrollbar{width:10px;}
-  .chat-scroll::-webkit-scrollbar-thumb{background:var(--brass-dim); border-radius:6px;}
-  .chat-scroll::-webkit-scrollbar-track{background:transparent;}
-
-  .msg{
-    max-width:72%;
-    animation:riseIn .4s cubic-bezier(.22,.8,.3,1) both;
-  }
-  @keyframes riseIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .msg.user{align-self:flex-end;}
-  .msg.bot{align-self:flex-start;}
-
-  .msg .label{
-    font-size:10px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    margin-bottom:6px;
-    display:flex;
-    align-items:center;
-    gap:7px;
-  }
-  .msg.user .label{color:var(--burgundy-light); justify-content:flex-end;}
-  .msg.bot .label{color:var(--brass-dim);}
-  .seal{width:14px;height:14px; flex:0 0 14px;}
-
-  .bubble{
-    padding:14px 18px;
-    font-size:15px;
-    line-height:1.65;
-    box-shadow:0 10px 24px -14px rgba(0,0,0,0.6);
-  }
-  .msg.user .bubble{
-    background:linear-gradient(160deg, var(--burgundy), #551f28);
-    color:var(--parchment);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:14px 3px 14px 14px;
-  }
-  .msg.bot .bubble{
-    background:linear-gradient(160deg, var(--panel), var(--panel-2));
-    border:1px solid var(--rule);
-    color:var(--parchment);
-    border-radius:3px 14px 14px 14px;
-  }
-  .bubble b{color:var(--brass-light); font-weight:400;}
-
-  .typing{
-    display:inline-flex;
-    gap:5px;
-    align-items:center;
-    padding:6px 2px;
-  }
-  .typing span{
-    width:6px;height:6px;
-    border-radius:50%;
-    background:var(--brass);
-    opacity:0.4;
-    animation:dotPulse 1.1s ease-in-out infinite;
-  }
-  .typing span:nth-child(2){animation-delay:.15s;}
-  .typing span:nth-child(3){animation-delay:.3s;}
-  @keyframes dotPulse{ 0%,80%,100%{opacity:0.25; transform:translateY(0);} 40%{opacity:1; transform:translateY(-3px);} }
-
-  /* ---------------- Composer ---------------- */
-  .composer{
-    border-top:1px solid var(--rule);
-    padding:16px 32px 22px;
-    background:linear-gradient(180deg, transparent, rgba(0,0,0,0.12));
-  }
-  .quickrow{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    margin-bottom:12px;
-    padding-bottom:2px;
-  }
-  .quickrow::-webkit-scrollbar{height:0;}
-  .qchip{
-    flex:0 0 auto;
-    font-size:11.5px;
-    letter-spacing:0.3px;
-    color:var(--brass-light);
-    border:1px solid rgba(176,141,79,0.35);
-    background:rgba(176,141,79,0.06);
-    padding:7px 13px;
-    border-radius:999px;
-    cursor:pointer;
-    white-space:nowrap;
-    transition:background .2s, transform .2s;
-  }
-  .qchip:hover{background:rgba(176,141,79,0.18); transform:translateY(-1px);}
-
-  .inputbar{
-    display:flex;
-    align-items:flex-end;
-    gap:12px;
-    border:1px solid var(--rule);
-    background:var(--panel-2);
-    border-radius:4px 16px 4px 16px;
-    padding:8px 8px 8px 18px;
-    transition:border-color .25s, box-shadow .25s;
-  }
-  .inputbar:focus-within{
-    border-color:var(--brass);
-    box-shadow:0 0 0 3px rgba(176,141,79,0.12);
-  }
-  .inputbar textarea{
-    flex:1;
-    resize:none;
-    border:none;
-    background:transparent;
-    color:var(--parchment);
-    font-family:inherit;
-    font-size:15px;
-    line-height:1.5;
-    padding:10px 0;
-    max-height:120px;
-    outline:none;
-  }
-  .inputbar textarea::placeholder{color:var(--parchment-dim); opacity:0.7;}
-
-  .sendbtn{
-    flex:0 0 auto;
-    width:48px;height:48px;
-    border-radius:50%;
-    border:1px solid var(--brass);
-    background:radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 60%, var(--brass-dim));
-    color:#2a1f0c;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:transform .18s cubic-bezier(.3,.6,.3,1.6), box-shadow .18s;
+  /* --------- viewer --------- */
+  .viewer-frame{
     position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    max-width:340px;
+    margin:0 auto 20px;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at 50% 50%, #0d1420, #04060a 78%);
+    border-radius:2px;
   }
-  .sendbtn:hover{box-shadow:0 6px 20px -4px rgba(176,141,79,0.6);}
-  .sendbtn:active{transform:scale(.88);}
-  .sendbtn.stamp{animation:stampSeal .45s cubic-bezier(.3,.9,.3,1);}
-  @keyframes stampSeal{
-    0%{transform:scale(1) rotate(0);}
-    35%{transform:scale(0.72) rotate(-14deg);}
-    60%{transform:scale(1.14) rotate(6deg);}
-    100%{transform:scale(1) rotate(0);}
-  }
-  .sendbtn svg{width:20px;height:20px;}
+  .viewer-frame canvas{position:absolute; inset:0; width:100%; height:100%;}
+  .corner{position:absolute; width:16px; height:16px; border-color:var(--accent-dim); opacity:0.8;}
+  .corner.tl{top:-1px; left:-1px; border-top:2px solid; border-left:2px solid;}
+  .corner.tr{top:-1px; right:-1px; border-top:2px solid; border-right:2px solid;}
+  .corner.bl{bottom:-1px; left:-1px; border-bottom:2px solid; border-left:2px solid;}
+  .corner.br{bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid;}
 
-  .disclaimer{
-    margin-top:10px;
-    font-size:10.5px;
-    color:var(--brass-dim);
-    letter-spacing:0.5px;
-    text-align:center;
+  .scan-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; background:rgba(5,6,10,0.72); backdrop-filter:none;
+    opacity:0; pointer-events:none; transition:opacity .35s ease;
   }
+  .scan-overlay.active{opacity:1;}
+  .scan-text{font-size:11px; letter-spacing:3px; color:var(--accent); text-transform:uppercase;}
+  .scan-bar{width:70%; height:3px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;}
+  .scan-bar-fill{height:100%; width:0%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow);}
 
-  /* ---------------- Responsive ---------------- */
-  @media (max-width:860px){
-    .app{grid-template-columns:1fr; grid-template-areas:"header" "side" "main";}
-    aside{
-      flex-direction:row;
-      overflow-x:auto;
-      border-right:none;
-      border-bottom:1px solid var(--rule);
-      padding:16px 18px;
-      gap:14px;
-    }
-    .advisor-card{flex:0 0 240px;}
-    .sidebox{flex:0 0 220px;}
-    .ledger-note{display:none;}
-    .msg{max-width:88%;}
-    .chat-scroll{padding:22px 18px 6px;}
-    .composer{padding:14px 18px 18px;}
-    header{padding:16px 18px 14px;}
+  .gen-btn{
+    display:block; width:100%;
+    background:var(--accent-soft);
+    border:1px solid var(--accent-dim);
+    color:var(--accent);
+    font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:3px;
+    padding:14px 18px; border-radius:3px; cursor:pointer;
+    transition:background .18s ease, box-shadow .18s ease, transform .08s ease, color .18s ease;
+    text-transform:uppercase;
+  }
+  .gen-btn:hover{background:var(--accent); color:#1a1304; box-shadow:0 0 22px var(--accent-glow);}
+  .gen-btn:active{transform:scale(0.98);}
+  .gen-btn:disabled{opacity:0.55; cursor:progress;}
+
+  .meter-row{display:flex; align-items:center; gap:10px; margin-top:16px; font-size:10.5px; letter-spacing:1.5px; color:var(--text-dim);}
+  .meter{flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden;}
+  .meter-fill{height:100%; width:0%; background:linear-gradient(90deg, var(--bad), var(--accent), var(--good)); background-size:300% 100%; transition:width 1s cubic-bezier(.2,.8,.2,1), background-position 1s ease;}
+  .meter-val{width:34px; text-align:right; color:var(--text);}
+
+  /* --------- data panel --------- */
+  #designation{
+    font-family:var(--display); font-size:24px; letter-spacing:1px; color:var(--text);
+    margin:0 0 4px;
+  }
+  #designation b{color:var(--accent); font-weight:700;}
+  .subtitle{font-size:11px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; margin-bottom:18px;}
+
+  .data-grid{display:grid; grid-template-columns:1fr 1fr; gap:0; border-top:1px solid var(--line); margin-bottom:18px;}
+  .data-row{
+    padding:9px 2px; border-bottom:1px solid var(--line);
+    display:flex; flex-direction:column; gap:2px;
+    opacity:0; transform:translateY(4px);
+    animation:rowin .4s ease forwards;
+  }
+  @keyframes rowin{to{opacity:1; transform:translateY(0);}}
+  .data-row .label{font-size:9.5px; letter-spacing:1.5px; color:var(--text-faint); text-transform:uppercase;}
+  .data-row .value{font-size:13px; color:var(--text);}
+  .data-row .value.accent{color:var(--accent);}
+
+  .log-section h3, .history h3{
+    font-family:var(--display); font-size:10.5px; letter-spacing:2.5px; color:var(--text-dim);
+    text-transform:uppercase; margin:0 0 8px; padding-bottom:6px; border-bottom:1px solid var(--line);
+  }
+  #logText{font-size:12.5px; line-height:1.7; color:var(--text); min-height:60px;}
+
+  .history{margin-top:20px;}
+  #historyList{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px;}
+  #historyList li{
+    display:flex; justify-content:space-between; gap:10px;
+    font-size:11px; padding:7px 8px; border-radius:2px;
+    color:var(--text-dim); transition:background .15s ease, color .15s ease;
+  }
+  #historyList li:hover{background:rgba(255,255,255,0.04); color:var(--text);}
+  #historyList li .h-id{color:var(--text); letter-spacing:0.5px;}
+  #historyList li .h-type{color:var(--accent-dim); text-transform:uppercase; letter-spacing:1px; font-size:9.5px;}
+
+  footer{text-align:center; margin-top:36px; font-size:10px; letter-spacing:2px; color:var(--text-faint);}
+
+  @media (max-width:520px){
+    .data-grid{grid-template-columns:1fr;}
+    #designation{font-size:20px;}
   }
 </style>
 </head>
 <body>
 
+<canvas id="starfield"></canvas>
+<div class="vignette"></div>
+
 <div class="app">
   <header>
-    <div class="brandrow">
-      <svg class="crest" viewBox="0 0 48 48" fill="none">
-        <rect x="1" y="1" width="46" height="46" rx="2" stroke="#b08d4f" stroke-width="1.2"/>
-        <path d="M24 7 L38 14 V26 C38 35 24 41 24 41 C24 41 10 35 10 26 V14 Z" stroke="#e4cf9a" stroke-width="1.3" fill="none"/>
-        <path d="M24 14 L31 18 V25 C31 30 24 34 24 34 C24 34 17 30 17 25 V18 Z" fill="#b08d4f" opacity="0.5"/>
-        <text x="24" y="27" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#efe6d1">AV</text>
+    <div class="brand">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="6" fill="#ffb454"/>
+        <circle cx="24" cy="24" r="14" stroke="#ffb454" stroke-width="1.4" opacity="0.6"/>
+        <circle cx="24" cy="24" r="21" stroke="#ffb454" stroke-width="1" opacity="0.3"/>
+        <circle cx="24" cy="3" r="2" fill="#ffb454"/>
       </svg>
-      <div>
-        <div class="brandname">ASHWORTH <b>&amp; VALE</b></div>
-        <div class="brandtag">Private Financial Counsel &middot; Est. MMXIV</div>
-      </div>
+      <span class="brand-text">DEEP FIELD<span class="brand-sub">EXOPLANET SIGNAL ARRAY</span></span>
     </div>
-    <div class="headright">
-      <div>By appointment &amp; correspondence</div>
-      <div class="hours">Markets open &middot; <span id="clock">—</span></div>
-    </div>
+    <div class="status"><span class="status-dot"></span>ARRAY ONLINE</div>
   </header>
 
-  <div class="ticker-wrap">
-    <div class="ticker" id="tickerRow"></div>
-  </div>
-
-  <aside>
-    <div class="advisor-card">
-      <div class="role">Your Counsel</div>
-      <div class="name">Mr. Edmund Vale</div>
-      <div class="desc"><span class="status-dot"></span>Available now &mdash; thirty years advising family offices, founders, and private capital on markets, structure, and patience.</div>
-    </div>
-
-    <div class="sidebox">
-      <h3>Begin With</h3>
-      <div class="prompt-list" id="promptList">
-        <button class="prompt-chip">How much should I keep in cash reserves?</button>
-        <button class="prompt-chip">Is now a sensible time to invest?</button>
-        <button class="prompt-chip">Help me think through a budget.</button>
-        <button class="prompt-chip">Explain compound interest simply.</button>
-        <button class="prompt-chip">Should I pay off debt or invest first?</button>
+  <main class="grid">
+    <section class="panel">
+      <div class="viewer-frame" id="viewerFrame">
+        <canvas id="planetCanvas" width="340" height="340"></canvas>
+        <div class="scan-overlay active" id="scanOverlay">
+          <div class="scan-text" id="scanText">NO SIGNAL LOCKED</div>
+          <div class="scan-bar"><div class="scan-bar-fill" id="scanFill"></div></div>
+        </div>
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
       </div>
-    </div>
-
-    <div class="ledger-note mono">
-      "Patience, compounded quietly,<br>outperforms urgency, compounded loudly."<br>&mdash; House motto, est. MMXIV
-    </div>
-  </aside>
-
-  <main>
-    <div class="chat-scroll" id="chatScroll">
-      <div class="msg bot">
-        <div class="label"><svg class="seal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#b08d4f" stroke-width="1.4"/><path d="M12 6l4 3v6l-4 3-4-3V9z" fill="#b08d4f" opacity="0.5"/></svg>Edmund Vale</div>
-        <div class="bubble">Good evening. I'm Edmund, your counsel here at <b>Ashworth &amp; Vale</b>. Markets, budgets, debt, equity in your own venture &mdash; bring me the question, and I'll bring you a clear, considered answer. Where shall we begin?</div>
+      <button class="gen-btn" id="genBtn">Triangulate Signal</button>
+      <div class="meter-row">
+        <span>HABITABILITY</span>
+        <div class="meter"><div class="meter-fill" id="habFill"></div></div>
+        <span class="meter-val" id="habVal">&mdash;</span>
       </div>
-    </div>
+    </section>
 
-    <div class="composer">
-      <div class="quickrow" id="quickRow">
-        <button class="qchip">Retirement planning</button>
-        <button class="qchip">Reading a balance sheet</button>
-        <button class="qchip">Starting a small business</button>
-        <button class="qchip">Tax-smart saving</button>
-        <button class="qchip">Inflation &amp; my savings</button>
+    <section class="panel">
+      <h2 id="designation">&mdash; AWAITING SIGNAL &mdash;</h2>
+      <div class="subtitle" id="subtitle">No transmission locked</div>
+      <div class="data-grid" id="dataGrid"></div>
+      <div class="log-section">
+        <h3>Transmission Log</h3>
+        <div id="logText">Press <b style="color:var(--accent)">Triangulate Signal</b> to sweep the array and lock onto a new world.</div>
       </div>
-      <div class="inputbar">
-        <textarea id="input" rows="1" placeholder="Write to your counsel&hellip;"></textarea>
-        <button class="sendbtn" id="sendBtn" aria-label="Send">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M4 20l16-8L4 4v6l10 2-10 2z" fill="currentColor"/></svg>
-        </button>
+      <div class="history">
+        <h3>Recent Signals</h3>
+        <ul id="historyList"></ul>
       </div>
-      <div class="disclaimer">For illustration only &middot; not licensed financial advice</div>
-    </div>
+    </section>
   </main>
+
+  <footer>DEEP FIELD ARRAY &middot; PROCEDURAL TELEMETRY &middot; NO TWO SIGNALS ALIKE</footer>
 </div>
 
 <script>
 (function(){
   "use strict";
 
-  /* ---------------- Clock ---------------- */
-  function tickClock(){
-    var d = new Date();
-    var h = d.getHours().toString().padStart(2,"0");
-    var m = d.getMinutes().toString().padStart(2,"0");
-    document.getElementById("clock").textContent = h+":"+m+" local";
-  }
-  tickClock(); setInterval(tickClock, 15000);
+  /* ---------------- utils ---------------- */
+  const rand=(a,b)=>Math.random()*(b-a)+a;
+  const randInt=(a,b)=>Math.floor(rand(a,b+1));
+  const choice=(arr)=>arr[Math.floor(Math.random()*arr.length)];
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
 
-  /* ---------------- Ticker tape ---------------- */
-  var SYMS = [
-    {s:"AV·CAP",p:188.42},{s:"VALE&CO",p:94.10},{s:"NRTH STAR",p:271.05},
-    {s:"HARBOR TR",p:63.77},{s:"CEDAR FND",p:142.9},{s:"GILT 10Y",p:4.31},
-    {s:"OLDOAK RE",p:55.2},{s:"MERIDIAN",p:310.6},{s:"BRASSWK",p:77.88}
+  function hexToRgb(hex){
+    hex=hex.replace('#','');
+    const n=parseInt(hex,16);
+    return [(n>>16)&255,(n>>8)&255,n&255];
+  }
+  function rgbStr(rgb,a){ return 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(a===undefined?1:a)+')'; }
+  function lerpColor(hexA,hexB,t){
+    const a=hexToRgb(hexA), b=hexToRgb(hexB);
+    return [Math.round(lerp(a[0],b[0],t)),Math.round(lerp(a[1],b[1],t)),Math.round(lerp(a[2],b[2],t))];
+  }
+
+  /* ---------------- starfield background ---------------- */
+  const sfCanvas=document.getElementById('starfield');
+  const sfCtx=sfCanvas.getContext('2d');
+  let stars=[];
+  function sizeStarfield(){
+    sfCanvas.width=window.innerWidth;
+    sfCanvas.height=window.innerHeight;
+    const count=Math.round((sfCanvas.width*sfCanvas.height)/9000);
+    stars=[];
+    for(let i=0;i<count;i++){
+      stars.push({
+        x:Math.random()*sfCanvas.width,
+        y:Math.random()*sfCanvas.height,
+        r:Math.random()*1.3+0.2,
+        phase:Math.random()*Math.PI*2,
+        speed:rand(0.4,1.4)
+      });
+    }
+  }
+  function drawStarfield(t){
+    sfCtx.clearRect(0,0,sfCanvas.width,sfCanvas.height);
+    sfCtx.fillStyle='#05060a';
+    sfCtx.fillRect(0,0,sfCanvas.width,sfCanvas.height);
+    for(const s of stars){
+      const a=0.35+0.65*Math.abs(Math.sin(t*0.0006*s.speed+s.phase));
+      sfCtx.beginPath();
+      sfCtx.fillStyle='rgba(220,230,255,'+a.toFixed(3)+')';
+      sfCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      sfCtx.fill();
+    }
+  }
+  window.addEventListener('resize', sizeStarfield);
+  sizeStarfield();
+
+  /* ---------------- audio (synthesized, no files) ---------------- */
+  let actx=null;
+  function audio(){ if(!actx){ actx=new (window.AudioContext||window.webkitAudioContext)(); } return actx; }
+  function tone(freqFrom,freqTo,dur,vol,type,delay){
+    try{
+      const ctx=audio();
+      const start=ctx.currentTime+(delay||0);
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type=type||'sine';
+      osc.frequency.setValueAtTime(freqFrom,start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(freqTo,1),start+dur);
+      gain.gain.setValueAtTime(0,start);
+      gain.gain.linearRampToValueAtTime(vol,start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,start+dur);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(start); osc.stop(start+dur+0.02);
+    }catch(e){}
+  }
+  function playSweep(){ tone(1400,260,0.5,0.05,'sine',0); }
+  function playLock(){ tone(440,440,0.12,0.08,'triangle',0); tone(660,660,0.18,0.07,'triangle',0.1); }
+
+  /* ---------------- data tables ---------------- */
+  const STAR_TYPES=[
+    {cls:'M',name:'Red Dwarf',color:['#ff6b4a','#c2381c'],temp:[2400,3700]},
+    {cls:'K',name:'Orange Dwarf',color:['#ffa94a','#d97a1f'],temp:[3700,5200]},
+    {cls:'G',name:'Yellow Dwarf',color:['#fff1a8','#ffd34d'],temp:[5200,6000]},
+    {cls:'F',name:'Yellow-White',color:['#fff8e7','#fff0b8'],temp:[6000,7500]},
+    {cls:'A',name:'White Star',color:['#eaf2ff','#cfe0ff'],temp:[7500,10000]},
+    {cls:'B',name:'Blue-White Giant',color:['#bcd9ff','#8fb8ff'],temp:[10000,22000]}
   ];
-  function renderTicker(){
-    var html = SYMS.map(function(o){
-      var chg = (Math.random()*2-0.6).toFixed(2);
-      var up = parseFloat(chg) >= 0;
-      return '<span class="tick"><span class="sym">'+o.s+'</span><span class="mono">'+o.p.toFixed(2)+'</span>'+
-        '<span class="chg '+(up?'up':'down')+' mono">'+(up?'▲':'▼')+' '+Math.abs(chg)+'%</span></span>';
-    }).join("");
-    document.getElementById("tickerRow").innerHTML = html + html;
-  }
-  renderTicker();
-  setInterval(function(){
-    SYMS.forEach(function(o){
-      var delta = (Math.random()-0.5) * (o.p*0.01);
-      o.p = Math.max(1, o.p + delta);
-    });
-    renderTicker();
-  }, 2600);
 
-  /* ---------------- Audio (synthesized, no files) ---------------- */
-  var AudioCtx = window.AudioContext || window.webkitAudioContext;
-  var actx = null;
-  function ctx(){ if(!actx && AudioCtx){ actx = new AudioCtx(); } return actx; }
-  function tone(freq,start,dur,type,peak){
-    var ac = ctx(); if(!ac) return;
-    var osc = ac.createOscillator(), gain = ac.createGain();
-    osc.type = type||"sine"; osc.frequency.value = freq;
-    osc.connect(gain); gain.connect(ac.destination);
-    var t0 = ac.currentTime+start;
-    gain.gain.setValueAtTime(0,t0);
-    gain.gain.linearRampToValueAtTime(peak||0.14, t0+0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
-    osc.start(t0); osc.stop(t0+dur+0.05);
-  }
-  function playStamp(){
-    var ac = ctx(); if(!ac) return;
-    var buf = ac.createBuffer(1, ac.sampleRate*0.08, ac.sampleRate);
-    var data = buf.getChannelData(0);
-    for(var i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * (1 - i/data.length); }
-    var src = ac.createBufferSource(); src.buffer = buf;
-    var gain = ac.createGain(); gain.gain.value = 0.18;
-    src.connect(gain); gain.connect(ac.destination);
-    src.start();
-    tone(90,0,0.18,"sine",0.2);
-  }
-  function playChime(){
-    tone(784,0,0.3,"triangle",0.1);
-    tone(988,0.09,0.35,"triangle",0.11);
-  }
+  const PLANET_TYPES=[
+    {id:'scorched',label:'Scorched Rock',palette:['#5a2a1d','#8c4a2a','#c77b3f'],ring:0.05,moons:[0,1],atmo:'Trace, none',temp:[400,900],hab:3,style:'cratered'},
+    {id:'molten',label:'Molten World',palette:['#1c0704','#8a1f10','#ff7a2a'],ring:0.04,moons:[0,1],atmo:'Sulfurous ash',temp:[700,1500],hab:1,style:'molten',glow:true},
+    {id:'barren',label:'Barren Moonscape',palette:['#4c4a47','#847f78','#b8b2a6'],ring:0.04,moons:[0,2],atmo:'None',temp:[-80,120],hab:8,style:'cratered'},
+    {id:'tundra',label:'Frozen Tundra',palette:['#6f8792','#9fc0cc','#eef6f8'],ring:0.1,moons:[0,2],atmo:'Thin nitrogen',temp:[-160,-20],hab:22,style:'banded'},
+    {id:'ocean',label:'Pelagic Ocean World',palette:['#06283c','#157a9e','#8be6ef'],ring:0.05,moons:[0,2],atmo:'Nitrogen-oxygen',temp:[-5,38],hab:68,style:'marbled'},
+    {id:'terrestrial',label:'Terrestrial',palette:['#123d24','#3f8a4a','#cdbd84'],ring:0.04,moons:[0,2],atmo:'Nitrogen-oxygen',temp:[-15,42],hab:78,style:'marbled'},
+    {id:'toxic',label:'Toxic Atmosphere',palette:['#3b2f08','#8a7a1f','#d9e05a'],ring:0.1,moons:[0,1],atmo:'Methane-ammonia haze',temp:[-60,70],hab:9,style:'banded'},
+    {id:'icegiant',label:'Ice Giant',palette:['#122a4d','#2e5f9e','#9fd3f0'],ring:0.45,moons:[1,5],atmo:'Hydrogen-helium-methane',temp:[-230,-190],hab:2,style:'banded'},
+    {id:'gasgiant',label:'Gas Giant',palette:['#3f2a10','#9c6a2e','#f0cf9a'],ring:0.65,moons:[1,6],atmo:'Hydrogen-helium',temp:[-170,-110],hab:1,style:'banded'}
+  ];
 
-  /* ---------------- Response engine ---------------- */
-  var RESP = {
-    greeting:[
-      "Good to hear from you. Tell me what's on the ledger today &mdash; income, obligations, or ambition?",
-      "Welcome back. Shall we look at the numbers, or the plan behind them?"
+  const PREFIXES=['KOI','TOI','HD','GJ','WASP','K2','TRAPPIST','KEPLER','PROX','HIP','LHS'];
+
+  const NARRATIVES={
+    scorched:[
+      "Thermal imaging shows a dayside baked to slag; the array caught nothing but heat shimmer and static.",
+      "Surface cracked into a mosaic of ash plains. Any atmosphere here burned off eons before we listened."
     ],
-    invest:[
-      "Timing the market is a parlor trick; <b>time in</b> the market is the actual craft. If your horizon is five years or longer and your cash reserve is already sound, steady, diversified contributions matter far more than the calendar date you begin.",
-      "Before a single share changes hands, I ask three things: is your emergency reserve funded, is your debt priced reasonably, and is this money you won't need inside three years? Satisfy those, and most entry points become reasonable ones.",
-      "Markets reward the patient and punish the anxious. A broad, low-cost allocation held through discomfort has outpaced most clever timing I've witnessed in thirty years of this work."
+    molten:[
+      "Still forming, or still dying — the surface glows in open rivers of rock visible from orbit.",
+      "Spectral lines flicker with outgassing. This one hasn't decided what kind of world it wants to be yet."
     ],
-    budget:[
-      "A budget is simply a ledger that tells the truth before you do. Start with three columns &mdash; fixed obligations, flexible living, and future-you &mdash; and insist future-you is paid first, not last.",
-      "Try the old proportion as a starting frame: roughly half to necessities, a third to discretion, and the remainder to savings and debt reduction. Adjust the ratio to your city, not to ambition alone.",
-      "The households that thrive aren't the ones who track every penny forever &mdash; they're the ones who build one honest month, then automate the discipline so willpower is no longer required."
+    barren:[
+      "A quiet, airless stone. No weather, no erosion — every crater here is exactly as old as it looks.",
+      "Dust and silence. The kind of world that keeps its history on the surface instead of burying it."
     ],
-    debt:[
-      "Rank each debt by interest rate, not by how loudly it bothers you. Settle the expensive balances first; the cheap ones can be managed on schedule while your capital works elsewhere.",
-      "Debt at 4% and an opportunity earning 8% is not a contradiction &mdash; it's arithmetic. Debt at 22% is rarely outrun by any investment I'd recommend with a straight face. Clear that first.",
-      "A debt paid down is a return, guaranteed, free of market mood. Weigh it against your other options honestly, and it often wins."
+    tundra:[
+      "Pale ice fields stretch pole to pole under a thin, cold sky. Nothing moves here in any hurry.",
+      "Frozen solid under a weak sun. Whatever atmosphere remains clings low, close to the ground."
     ],
-    retirement:[
-      "The earliest contributions do the least visible work and the most actual work &mdash; compounding is a quiet partner who prefers decades to seasons. Begin smaller than feels meaningful; time will make it so.",
-      "A pleasant retirement is rarely the product of one brilliant decision. It's the unremarkable, repeated decision to contribute before the money has a chance to be spent on anything else.",
-      "Ask what income, not what balance, you'll need. A number without a monthly cost of living attached to it is just a figure on paper."
+    ocean:[
+      "No continents found — just one planet-wide sea under a hazy, breathable-looking sky.",
+      "Tidal signatures suggest a large moon nearby. The whole surface is water, as far as we can tell."
     ],
-    tax:[
-      "Tax efficiency isn't evasion &mdash; it's sequencing. Use tax-advantaged accounts fully before taxable ones, and let the structure, not the whim, decide where new capital lands.",
-      "The quiet tax strategy almost everyone neglects: harvesting losses, timing gains, and reviewing withholding once a year with the same seriousness as a performance review."
+    terrestrial:[
+      "Green-brown continents, blue oceans, a nitrogen-oxygen sky. Uncomfortably familiar, honestly.",
+      "A balanced world — weather systems, seasons, and a surface that looks built for something to live on it."
     ],
-    business:[
-      "A venture's survival is usually decided by its cash conversion cycle, not its idea. Know precisely how long cash takes to leave your hands and return before you scale anything.",
-      "Price for your value, not your anxiety. Underpricing a first offering is the most common and most forgivable mistake I see &mdash; forgivable only if corrected within the first year.",
-      "Keep personal and business ledgers entirely separate from day one. Nothing complicates counsel, or a future investor's confidence, faster than the two intertwined."
+    toxic:[
+      "A thick yellow haze hides the surface entirely. Nothing on our instruments wants to breathe this.",
+      "Chemistry over here got complicated fast. The clouds alone would strip paint back home."
     ],
-    market:[
-      "Volatility is the price of admission, not a malfunction. The portfolios that suffer most are the ones reshuffled in reaction to headlines rather than held to a plan written in calmer hours.",
-      "Inflation is a quiet tax on cash left idle. A reserve is prudent; a fortune left entirely uninvested for decades is its own kind of risk."
+    icegiant:[
+      "Deep blue bands of methane cloud wrap a planet far larger than anything rocky.",
+      "Cold, quiet, enormous. Its moons outnumber the fingers on one hand and then some."
     ],
-    savings:[
-      "A reserve of three to six months of essential expenses, held somewhere liquid and unglamorous, is the foundation beneath every other ambition we might discuss.",
-      "Automate the saving before the spending has a vote. What the hand never touches, the mind rarely misses."
-    ],
-    thanks:[
-      "You're very welcome. My door &mdash; or this correspondence &mdash; remains open.",
-      "A pleasure, as always. Bring the next figure whenever it's ready."
-    ],
-    farewell:[
-      "Until next time. Keep the ledger honest and the plan unhurried.",
-      "Go well. I'll be here when the next question presents itself."
-    ],
-    fallback:[
-      "Tell me a touch more &mdash; are we speaking of saving, investing, debt, taxes, or a venture of your own? I give sharper counsel with a sharper question.",
-      "A fair point to raise, though I'll serve you better with specifics. Numbers, a timeline, or a goal would help me answer properly.",
-      "Noted. If you frame that around a figure or a date &mdash; what you have, what you owe, or what you're aiming for &mdash; I can respond with something more useful than sentiment."
+    gasgiant:[
+      "A banded giant, storms the size of continents dragging slowly around its equator.",
+      "No surface to speak of — just pressure, depth, and a retinue of moons holding orbit around it."
     ]
   };
 
-  var RULES = [
-    [/\b(hi|hello|hey|good (morning|evening|afternoon))\b/i, "greeting"],
-    [/\b(invest|stock|share|equity|etf|portfolio|market(s)?|bond)\b/i, "invest"],
-    [/\b(budget|spending|expense|afford)\b/i, "budget"],
-    [/\b(debt|loan|credit card|mortgage|owe)\b/i, "debt"],
-    [/\b(retire|retirement|pension|401k|ira)\b/i, "retirement"],
-    [/\b(tax|taxes|irs|deduction)\b/i, "tax"],
-    [/\b(business|startup|venture|founder|revenue|cash flow)\b/i, "business"],
-    [/\b(inflation|recession|volatil|economy|economic)\b/i, "market"],
-    [/\b(save|saving|savings|reserve|emergency fund)\b/i, "savings"],
-    [/\b(thank|thanks|appreciate)\b/i, "thanks"],
-    [/\b(bye|goodbye|farewell|see you)\b/i, "farewell"]
-  ];
+  /* ---------------- generation ---------------- */
+  let historyData=[];
 
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function genDesignation(position){
+    const prefix=choice(PREFIXES);
+    const num=randInt(100,88999);
+    const letter=String.fromCharCode(98+clamp(position-1,0,7));
+    return {full:prefix+'-'+num+' '+letter, star:prefix+'-'+num};
+  }
 
-  function respondTo(text){
-    for(var i=0;i<RULES.length;i++){
-      if(RULES[i][0].test(text)) return pick(RESP[RULES[i][1]]);
+  function buildSystem(){
+    const star=choice(STAR_TYPES);
+    const starTemp=randInt(star.temp[0],star.temp[1]);
+    const type=choice(PLANET_TYPES);
+    const totalPlanets=randInt(1,8);
+    const position=randInt(1,totalPlanets);
+    const des=genDesignation(position);
+    const hasRings=Math.random()<type.ring;
+    const moonCount=randInt(type.moons[0],type.moons[1]);
+    const isGiant=(type.id==='gasgiant'||type.id==='icegiant');
+    const radiusEarth=isGiant?rand(3.2,12.5):rand(0.35,1.9);
+    const massEarth=isGiant?Math.pow(radiusEarth,2.3)*rand(0.7,1.1):Math.pow(radiusEarth,2.9)*rand(0.75,1.2);
+    const orbitAU=rand(0.03,6.5);
+    const orbitPeriodDays=Math.max(4,Math.round(Math.pow(orbitAU,1.5)*365));
+    const periodLabel=orbitPeriodDays>500?(orbitPeriodDays/365.25).toFixed(1)+' yr':orbitPeriodDays+' d';
+    const surfaceTemp=randInt(type.temp[0],type.temp[1]);
+    let hab=type.hab;
+    hab-=Math.min(40,Math.abs(surfaceTemp-16)/2);
+    hab+=rand(-6,6);
+    hab=Math.round(clamp(hab,0,100));
+    const narrative=choice(NARRATIVES[type.id]).replace(/\{star\}/g,des.star);
+
+    return {
+      designation:des.full, starName:des.star, star, starTemp, type, totalPlanets, position,
+      hasRings, moonCount, radiusEarth, massEarth, orbitAU, periodLabel, surfaceTemp, hab, narrative
+    };
+  }
+
+  function buildVisual(sys){
+    const t=sys.type;
+    const seed={
+      palette:t.palette,
+      style:t.style,
+      glow:!!t.glow,
+      blotches:[],
+      bandOffsets:[],
+      rings: sys.hasRings ? { tilt:rand(0.28,0.42), colorIdx: 1, alpha:rand(0.35,0.55), widthMul:rand(1.5,2.1) } : null,
+      moons: []
+    };
+    if(t.style==='banded'){
+      const bands=randInt(6,10);
+      for(let i=0;i<bands;i++){
+        seed.bandOffsets.push({ y:(i/bands), thick:rand(0.6,1.6)/bands, cShift:rand(-0.25,0.25), speed:rand(0.15,0.4)*(i%2?1:-1) });
+      }
+    } else {
+      const count = t.style==='marbled'? randInt(10,16) : randInt(14,22);
+      for(let i=0;i<count;i++){
+        seed.blotches.push({
+          a:rand(0,Math.PI*2), d:rand(0,0.92), size:rand(0.08,0.26),
+          shade:rand(-0.3,0.35), drift:rand(0.02,0.06)*(Math.random()<0.5?1:-1)
+        });
+      }
     }
-    return pick(RESP.fallback);
-  }
-
-  /* ---------------- Chat rendering ---------------- */
-  var scrollEl = document.getElementById("chatScroll");
-
-  function addMsg(role, html, animate){
-    var wrap = document.createElement("div");
-    wrap.className = "msg " + role;
-    var label = role === "user"
-      ? '<div class="label">You</div>'
-      : '<div class="label"><svg class="seal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#b08d4f" stroke-width="1.4"/><path d="M12 6l4 3v6l-4 3-4-3V9z" fill="#b08d4f" opacity="0.5"/></svg>Edmund Vale</div>';
-    wrap.innerHTML = label + '<div class="bubble">'+html+'</div>';
-    scrollEl.appendChild(wrap);
-    scrollEl.scrollTop = scrollEl.scrollHeight;
-    return wrap;
-  }
-
-  function addTyping(){
-    var wrap = document.createElement("div");
-    wrap.className = "msg bot";
-    wrap.id = "typingMsg";
-    wrap.innerHTML = '<div class="label"><svg class="seal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#b08d4f" stroke-width="1.4"/><path d="M12 6l4 3v6l-4 3-4-3V9z" fill="#b08d4f" opacity="0.5"/></svg>Edmund Vale</div><div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>';
-    scrollEl.appendChild(wrap);
-    scrollEl.scrollTop = scrollEl.scrollHeight;
-  }
-
-  var input = document.getElementById("input");
-  var sendBtn = document.getElementById("sendBtn");
-
-  function autoGrow(){
-    input.style.height = "auto";
-    input.style.height = Math.min(input.scrollHeight, 120) + "px";
-  }
-  input.addEventListener("input", autoGrow);
-
-  function sendMessage(){
-    var text = input.value.trim();
-    if(!text) return;
-    ctx();
-    addMsg("user", escapeHtml(text));
-    input.value = ""; autoGrow();
-
-    sendBtn.classList.remove("stamp");
-    requestAnimationFrame(function(){ sendBtn.classList.add("stamp"); });
-    playStamp();
-
-    addTyping();
-    var delay = 700 + Math.random()*700;
-    setTimeout(function(){
-      var t = document.getElementById("typingMsg");
-      if(t) t.remove();
-      addMsg("bot", respondTo(text));
-      playChime();
-    }, delay);
-  }
-
-  function escapeHtml(s){
-    var d = document.createElement("div");
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  sendBtn.addEventListener("click", sendMessage);
-  input.addEventListener("keydown", function(e){
-    if(e.key === "Enter" && !e.shiftKey){
-      e.preventDefault();
-      sendMessage();
+    for(let i=0;i<sys.moonCount;i++){
+      seed.moons.push({ dist:0.62+ i*0.17 + rand(0,0.05), size:rand(0.035,0.07), speed:rand(0.25,0.55)*(Math.random()<0.5?1:-1), phase:rand(0,Math.PI*2) });
     }
-  });
+    return seed;
+  }
 
-  document.querySelectorAll(".prompt-chip, .qchip").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      input.value = btn.textContent;
-      autoGrow();
-      input.focus();
-      sendMessage();
+  /* ---------------- planet renderer ---------------- */
+  const pCanvas=document.getElementById('planetCanvas');
+  const pCtx=pCanvas.getContext('2d');
+  let currentVisual=null;
+  let rotation=0;
+
+  function drawPlanet(time){
+    const w=pCanvas.width, h=pCanvas.height;
+    pCtx.clearRect(0,0,w,h);
+    if(!currentVisual) return;
+    const cx=w/2, cy=h/2, R=w*0.30;
+    const v=currentVisual;
+    rotation += 0.0022;
+
+    // rings behind
+    if(v.rings){
+      drawRing(cx,cy,R,v,true);
+    }
+
+    // planet base sphere
+    pCtx.save();
+    pCtx.beginPath();
+    pCtx.arc(cx,cy,R,0,Math.PI*2);
+    pCtx.clip();
+
+    const base=lerpColor(v.palette[0],v.palette[1],0.5);
+    const grad=pCtx.createRadialGradient(cx-R*0.4,cy-R*0.4,R*0.1,cx,cy,R*1.15);
+    grad.addColorStop(0, rgbStr(hexToRgb(v.palette[2]||v.palette[1]),1));
+    grad.addColorStop(0.55, rgbStr(hexToRgb(v.palette[1]),1));
+    grad.addColorStop(1, rgbStr(hexToRgb(v.palette[0]),1));
+    pCtx.fillStyle=grad;
+    pCtx.fillRect(cx-R,cy-R,R*2,R*2);
+
+    if(v.style==='banded'){
+      for(const b of v.bandOffsets){
+        const yy=cy - R + b.y*R*2 + Math.sin(rotation*2+b.y*8)*2;
+        const thick=b.thick*R*2;
+        const c=hexToRgb(b.cShift>0?v.palette[2]||v.palette[1]:v.palette[0]);
+        pCtx.fillStyle=rgbStr(c,0.22+Math.abs(b.cShift));
+        pCtx.beginPath();
+        pCtx.ellipse(cx, yy, R*1.05, Math.max(2,thick/2), 0, 0, Math.PI*2);
+        pCtx.fill();
+      }
+    } else {
+      for(const bl of v.blotches){
+        const ang=bl.a + rotation*bl.drift*6;
+        const dist=bl.d*R;
+        const x=cx+Math.cos(ang)*dist;
+        const y=cy+Math.sin(ang)*dist*0.92;
+        const size=bl.size*R;
+        const col=bl.shade>0?hexToRgb(v.palette[2]||v.palette[1]):hexToRgb(v.palette[0]);
+        pCtx.fillStyle=rgbStr(col, 0.28+Math.abs(bl.shade));
+        pCtx.beginPath();
+        pCtx.ellipse(x,y,size,size*0.78,ang,0,Math.PI*2);
+        pCtx.fill();
+      }
+    }
+
+    // shading (terminator)
+    const shade=pCtx.createRadialGradient(cx-R*0.35,cy-R*0.35,R*0.2,cx+R*0.2,cy+R*0.2,R*1.3);
+    shade.addColorStop(0,'rgba(0,0,0,0)');
+    shade.addColorStop(1,'rgba(0,0,0,0.55)');
+    pCtx.fillStyle=shade;
+    pCtx.fillRect(cx-R,cy-R,R*2,R*2);
+
+    if(v.glow){
+      pCtx.fillStyle='rgba(255,120,40,0.18)';
+      pCtx.beginPath(); pCtx.arc(cx,cy,R,0,Math.PI*2); pCtx.fill();
+    }
+    pCtx.restore();
+
+    // atmosphere rim
+    pCtx.beginPath();
+    pCtx.arc(cx,cy,R+2,0,Math.PI*2);
+    pCtx.lineWidth=4;
+    pCtx.strokeStyle='rgba(255,255,255,0.10)';
+    pCtx.stroke();
+
+    if(v.rings){
+      drawRing(cx,cy,R,v,false);
+    }
+
+    // moons
+    for(const m of v.moons){
+      const ang = time*0.00035*m.speed + m.phase;
+      const mx=cx+Math.cos(ang)*R*(1+m.dist);
+      const my=cy+Math.sin(ang)*R*(1+m.dist)*0.4;
+      pCtx.beginPath();
+      pCtx.fillStyle='rgba(200,210,225,0.9)';
+      pCtx.arc(mx,my,Math.max(2,m.size*R),0,Math.PI*2);
+      pCtx.fill();
+    }
+  }
+
+  function drawRing(cx,cy,R,v,behind){
+    const r=v.rings;
+    const rx=R*2.0, ry=R*2.0*r.tilt;
+    pCtx.save();
+    pCtx.beginPath();
+    if(behind){
+      pCtx.rect(cx-rx-10, cy-ry-10, (rx+10)*2, ry+10);
+    } else {
+      pCtx.rect(cx-rx-10, cy, (rx+10)*2, ry+10);
+    }
+    pCtx.clip();
+    pCtx.strokeStyle=rgbStr(hexToRgb(v.palette[2]||v.palette[1]), r.alpha);
+    pCtx.lineWidth=R*0.16*r.widthMul;
+    pCtx.beginPath();
+    pCtx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+    pCtx.stroke();
+    pCtx.strokeStyle=rgbStr(hexToRgb(v.palette[0]), r.alpha*0.6);
+    pCtx.lineWidth=R*0.05;
+    pCtx.beginPath();
+    pCtx.ellipse(cx,cy,rx*0.86,ry*0.86,0,0,Math.PI*2);
+    pCtx.stroke();
+    pCtx.restore();
+  }
+
+  function loop(t){
+    drawStarfield(t);
+    drawPlanet(t);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ---------------- UI wiring ---------------- */
+  const genBtn=document.getElementById('genBtn');
+  const scanOverlay=document.getElementById('scanOverlay');
+  const scanText=document.getElementById('scanText');
+  const scanFill=document.getElementById('scanFill');
+  const designationEl=document.getElementById('designation');
+  const subtitleEl=document.getElementById('subtitle');
+  const dataGrid=document.getElementById('dataGrid');
+  const logText=document.getElementById('logText');
+  const habFill=document.getElementById('habFill');
+  const habVal=document.getElementById('habVal');
+  const historyList=document.getElementById('historyList');
+
+  function row(label,value,accent){
+    return '<div class="data-row"><span class="label">'+label+'</span><span class="value'+(accent?' accent':'')+'">'+value+'</span></div>';
+  }
+
+  function renderData(sys){
+    designationEl.innerHTML='SIGNAL <b>'+sys.designation+'</b>';
+    subtitleEl.textContent=sys.type.label.toUpperCase()+' — ORBITING A CLASS '+sys.star.cls+' STAR';
+
+    const rowsHtml=[
+      row('Host Star', sys.starName+' ('+sys.star.name+')'),
+      row('Spectral Class', sys.star.cls+' &middot; '+sys.starTemp+' K'),
+      row('Orbital Position', sys.position+' of '+sys.totalPlanets+' planets'),
+      row('Orbital Period', sys.periodLabel),
+      row('Orbital Distance', sys.orbitAU.toFixed(2)+' AU'),
+      row('Planet Radius', sys.radiusEarth.toFixed(2)+' R⊕'),
+      row('Planet Mass', sys.massEarth.toFixed(2)+' M⊕'),
+      row('Surface Temp', sys.surfaceTemp+' &deg;C'),
+      row('Atmosphere', sys.type.atmo),
+      row('Ring System', sys.hasRings?'Detected':'None'),
+      row('Moons', sys.moonCount),
+      row('Habitability Index', sys.hab+' / 100', true)
+    ];
+    dataGrid.innerHTML=rowsHtml.map((h,i)=>h.replace('class="data-row"','class="data-row" style="animation-delay:'+(i*45)+'ms"')).join('');
+
+    logText.textContent=sys.narrative;
+
+    habFill.style.width=sys.hab+'%';
+    habFill.style.backgroundPosition=sys.hab+'% 0';
+    habVal.textContent=sys.hab;
+
+    historyData.unshift(sys);
+    if(historyData.length>6) historyData.pop();
+    historyList.innerHTML=historyData.map(function(h){
+      return '<li><span class="h-id">'+h.designation+'</span><span class="h-type">'+h.type.label+'</span></li>';
+    }).join('');
+  }
+
+  let scanning=false;
+  function generate(){
+    if(scanning) return;
+    scanning=true;
+    genBtn.disabled=true;
+    genBtn.textContent='Scanning…';
+    playSweep();
+    scanOverlay.classList.add('active');
+    scanFill.style.transition='none';
+    scanFill.style.width='0%';
+    const labels=['ACQUIRING CARRIER','FILTERING NOISE FLOOR','RESOLVING ORBIT','TRIANGULATING SIGNAL','LOCKING'];
+    let step=0;
+    scanText.textContent=labels[0];
+    requestAnimationFrame(function(){
+      scanFill.style.transition='width 0.9s cubic-bezier(.3,.7,.2,1)';
+      scanFill.style.width='100%';
     });
-  });
+    const stepTimer=setInterval(function(){
+      step++;
+      if(step<labels.length) scanText.textContent=labels[step];
+    },180);
+
+    setTimeout(function(){
+      clearInterval(stepTimer);
+      const sys=buildSystem();
+      currentVisual=buildVisual(sys);
+      renderData(sys);
+      playLock();
+      scanOverlay.classList.remove('active');
+      genBtn.disabled=false;
+      genBtn.textContent='Triangulate Signal';
+      scanning=false;
+    },900);
+  }
+
+  genBtn.addEventListener('click', generate);
 
 })();
 </script>
