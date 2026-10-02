@@ -1,69 +1,84 @@
-# DECISIONS.md — Apex: The Sports Trivia Championship
+# DECISIONS.md — Ashworth & Vale: Private Financial Counsel
 
-Log of meaningful choices made while building `index.html`, a single self-contained
-file with no external libraries, fonts, or assets. This replaces the previous
-"clutch-shot" mini-game in this repo per the latest request.
+Log of meaningful choices made while building `index.html`, a single
+self-contained chat-style finance assistant (HTML/CSS/JS inline, no
+external libraries, fonts, or assets). This replaces the previous
+"Apex" sports trivia build in this repo per the latest request.
 
-## Scope
-- **10 questions per playthrough**, drawn from a pool of 24 across 8 sports
-  (basketball, soccer, tennis, American football, baseball, golf, boxing,
-  Olympics, hockey, F1, cricket). Narrowed from "build a huge question bank"
-  to a curated, well-written set — quality of each question over sheer volume.
-- **One game mode** (multiple choice, single round, 3 difficulty presets:
-  Rookie / Mixed / Legend) rather than multiple modes (timed, survival,
-  categories-select). Keeps the experience tight and polished rather than
-  spreading effort thin across half-built modes.
-- **Difficulty presets reshuffle the same pool** (easy-weighted, mixed, or
-  hard-weighted) instead of maintaining three fully separate question sets —
-  gives replay variety without tripling content-writing time.
+## Concept & persona
+- Framed as correspondence with a named private financial counsel —
+  **Edmund Vale** of **Ashworth & Vale** — rather than a generic
+  "AI assistant" chat box. A persona with a voice (measured, old-money,
+  slightly formal) reads as considered rather than templated, and gives
+  the scripted responses a reason to sound the way they do.
+- Scripted response engine uses **keyword/regex rule matching** against
+  11 finance topics (investing, budgeting, debt, retirement, tax,
+  business/startup, market/economy, savings, greetings, thanks,
+  farewell), each with 2–3 hand-written variations so repeat questions
+  don't feel robotic, plus a fallback that asks a clarifying question
+  in-voice rather than a dead "I don't understand." No backend/API —
+  all canned, as the brief allowed, but tuned to sound specific
+  (interest-rate ranking for debt, cash-conversion cycle for business,
+  three-to-six-month reserve language) rather than vague filler.
 
-## Visual style
-- Palette: near-black charcoal background with a warm gold (#d4af37) accent,
-  cream text — a "championship trophy room" feel rather than generic
-  dark-mode-with-a-blue-accent.
-- Typography: system serif (Georgia) for headings/question text for a
-  classic, engraved-plaque feel; a sans system stack (Optima/Candara/Segoe UI)
-  for labels and UI chrome, for contrast. **No Google Fonts link** — kept
-  fully offline/self-contained per the "no external files" rule, and it
-  removes a network dependency for a demo that may run without wifi.
-- Gilded corner brackets, gradient-text headings, and a soft inner/outer
-  shadow frame to read as "fancy" without relying on images.
+## Avoiding the generic "AI-generated" look
+- **Palette**: deep forest/ink green + aged brass + burgundy, on a warm
+  parchment text color — explicitly not a purple-to-blue gradient.
+  Brass is used as the single accent color throughout (ticker, borders,
+  seals, send button) instead of a gradient "hero" identity.
+- **No glassmorphism** — panels are solid, layered dark greens with thin
+  brass hairline borders (a ledger/leather-bound-book feel), not frosted
+  translucent cards.
+- **Typography**: Palatino/Iowan Old Style/Georgia serif stack for all
+  prose (distinctive, not Inter/system-ui), paired with Courier New
+  monospace for all numeric/ticker data — a deliberate "ledger" pairing
+  rather than one generic sans font doing everything.
+- **No emoji** anywhere; iconography is hand-built inline SVG (a wax-seal
+  monogram crest, a shield "seal" mark next to the advisor's name, a
+  quill-nib send arrow).
+- **Asymmetric layout**: fixed-width sidebar (advisor card + prompt list
+  + house motto) beside a wider chat column — not a centered hero. Chat
+  bubbles use mixed corner radii (sharp corner on the "origin" side,
+  rounded elsewhere) rather than uniform pill shapes, echoing a folded
+  letter/stamped card rather than a default chat-app bubble.
+- **Scrolling stock ticker** across the top (randomized fake symbols with
+  a live random-walk price update every ~2.6s) adds texture and motion
+  that's thematically load-bearing, not decorative gradient noise.
 
 ## Delight / polish
-- **Confetti burst** (small, DOM-based — no canvas library) fires from the
-  selected answer on every correct response, and a larger celebratory burst
-  fires on the results screen for a score of 60%+.
-- **Synthesized sound effects** via the Web Audio API (no audio files):
-  a bright ascending triangle-wave chime for correct answers, a low sawtooth
-  buzz for wrong answers, and a four-note fanfare on the results screen.
-  Audio context is unlocked on the "Begin" button click (user gesture) to
-  satisfy browser autoplay policies.
-- Results screen assigns a **rank title** (Rookie Season → The Legend) based
-  on score percentage, with bespoke copy per tier, plus an inline SVG trophy
-  that animates in with a spring-like pop.
-- "Copy Result" button lets the user copy a shareable score line to the
-  clipboard — a small extra touch, not a full social-share integration
-  (which would require external SDKs/popups, out of scope for a
-  self-contained file).
+- **Wax-seal stamp animation + sound** on the send button: a quick
+  scale/rotate "thump" synced to a synthesized noise-burst + low sine
+  thud (Web Audio API, no audio files) — stands in for the satisfying
+  "stamping a letter shut" moment when a message is sent.
+- A soft two-note **chime** (Web Audio) plays when Edmund's reply lands,
+  and a typing indicator (three breathing dots, styled as pen taps)
+  shows during the scripted "thinking" delay (700–1400ms, randomized so
+  it doesn't feel metronomic).
+- Quick-start prompt chips (sidebar "Begin With" list + composer
+  "quick topics" row) insert and auto-send a relevant question — lets a
+  first-time visitor see the persona respond immediately without typing.
+- Textarea auto-grows with content; Enter sends, Shift+Enter breaks line,
+  consistent with real chat-app conventions despite the bespoke visuals.
 
-## Interaction / responsiveness
-- Options lock and reveal correct/incorrect state immediately on click, with
-  a pulse animation on the correct answer and a shake on the wrong pick, so
-  feedback is instant and readable at a glance.
-- All tap targets (options, buttons, difficulty chips) sized generously for
-  touch; `touch-action: manipulation` and disabled tap-highlight for a
-  native-feeling mobile interaction.
-- Layout is a single centered card that reflows via `clamp()` typography and
-  a mobile breakpoint (≤480px) — tested conceptually against phone and
-  laptop widths; no separate mobile template needed given the simple
-  single-column structure.
+## Scope narrowed on purpose
+- **Rule-based matching, not a full NLU/intent system** — a small,
+  curated set of finance topics with strong, specific copy beats a huge
+  shallow keyword list. Kept to ~11 categories that cover the most
+  common personal/business finance questions.
+- **No persistence** (chat resets on reload) — a session-only demo chat
+  doesn't need local storage or accounts; added complexity wasn't
+  justified for a single self-contained file.
+- **Sidebar collapses to a horizontal scroll strip under 860px** rather
+  than a hamburger menu/off-canvas drawer — simpler to implement well
+  and keeps the advisor card and prompts reachable on phone without
+  extra interaction chrome.
 
 ## Repo / deployment
-- Built directly inside the existing `sports-game-demo` repo as instructed,
-  overwriting the prior `index.html` and `DECISIONS.md` rather than creating
-  new files or a new repo.
-- This repo's scoped `.claude/CLAUDE.md` explicitly allows `git push` here
-  for the purpose of deploying `index.html` to GitHub Pages for a class
-  demo — that override does not change the global "never push" rule, and
-  was only exercised within this repo, for this purpose.
+- Built directly inside the existing `sports-game-demo` repo as
+  instructed, overwriting `index.html` and `DECISIONS.md` in place
+  rather than creating new files or a new repo.
+- This repo's scoped `.claude/CLAUDE.md` explicitly allows `git push`
+  here for deploying `index.html` to GitHub Pages for a class demo —
+  that override is local to this repo only and does not change the
+  global "never push" rule elsewhere.
 - Committed and pushed to `main` so the live Pages site updates.
